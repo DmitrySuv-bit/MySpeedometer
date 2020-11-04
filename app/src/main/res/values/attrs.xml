@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SpeedometerView">
+        <attr name="currentSpeed" format="float" />
+        <attr name="maxSpeed" format="integer" />
+        <attr name="size" format="integer" />
+        <attr name="digitsTextSize" format="float" />
+        <attr name="colorBackground" format="color" />
+        <attr name="colorBorder" format="color" />
+        <attr name="colorDigits" format="color" />
+    </declare-styleable>
+</resources>
