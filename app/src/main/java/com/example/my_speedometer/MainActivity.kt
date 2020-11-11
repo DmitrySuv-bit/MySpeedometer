@@ -4,15 +4,12 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.*
 import android.widget.Button
-import androidx.annotation.RequiresApi
 
 class MainActivity : AppCompatActivity() {
     private val button: Button
@@ -27,16 +24,13 @@ class MainActivity : AppCompatActivity() {
 
     var isFirstStart = false
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        maxSpeed = speedometer.getMaxSpeed().toFloat()
-        arrowColor = speedometer.getColorArrow()
-
-        Log.d("fdsf", "запуск")
+        maxSpeed = speedometer.maxSpeed.toFloat()
+        arrowColor = speedometer.colorArrow
 
         val arrowColorAnimation = ValueAnimator().apply {
             setIntValues(
@@ -47,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
             setEvaluator(ArgbEvaluator())
             addUpdateListener {
-                speedometer.setColorArrow(this.animatedValue as Int)
+                speedometer.colorArrow = this.animatedValue as Int
             }
 
             duration = 300L
@@ -55,7 +49,7 @@ class MainActivity : AppCompatActivity() {
 
         val arrowMotionAnimation = ValueAnimator.ofFloat().apply {
             addUpdateListener {
-                speedometer.setCurrencySpeed(this.animatedValue as Float)
+                speedometer.currentSpeed = this.animatedValue as Float
 
                 if (this.animatedValue as Float >= 160f) {
                     if (!arrowColorAnimation.isStarted) {
@@ -75,12 +69,13 @@ class MainActivity : AppCompatActivity() {
                         if (isFirstStart) {
                             if (arrowMotionAnimation.isStarted) {
                                 arrowMotionAnimation.setFloatValues(
-                                    arrowMotionAnimation.animatedValue as Float, maxSpeed)
+                                    arrowMotionAnimation.animatedValue as Float, maxSpeed
+                                )
                             } else {
                                 arrowMotionAnimation.setFloatValues(0f, maxSpeed)
                             }
                         } else {
-                            currencySpeed = speedometer.getCurrencySpeed()
+                            currencySpeed = speedometer.currentSpeed
                             arrowMotionAnimation.setFloatValues(currencySpeed, maxSpeed)
                         }
 
