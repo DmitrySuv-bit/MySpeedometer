@@ -15,10 +15,14 @@ class SpeedometerView @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null,
 ) : View(context, attributeSet) {
-
     private companion object {
         const val CURRENT_SPEED_KEY = "com.speedometer_view.current_speed"
         const val SUPER_STATE = "com.speedometer_view.super_state"
+        const val BORDER_WIDTH = 10f
+        const val DIAMETER_DIGITS_RATIO = 0.73f
+        const val DIAL_INTERVAL = 20
+        const val DIVISION_DIAL_INTERVAL = 10
+        const val ARROW_LENGTH_RATIO = 0.35f
     }
 
     var currentSpeed = 0f
@@ -45,13 +49,12 @@ class SpeedometerView @JvmOverloads constructor(
     private var size = 0
     private var centerX = 0f
     private var centerY = 0f
-    private var borderWidth = 10f
     private var digitsTextSize = 0f
     private var radius = 0f
 
     private val circle = Path()
     private val line = Path()
-    private val matrix1 = Matrix()
+    private val centerLine = Path()
     private var generalPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var digitsPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -59,7 +62,6 @@ class SpeedometerView @JvmOverloads constructor(
     private var colorBackground = Color.DKGRAY
     private var colorBorder = Color.RED
     private var colorDigits = Color.WHITE
-
 
     init {
         val typedArray = context.obtainStyledAttributes(
@@ -81,7 +83,6 @@ class SpeedometerView @JvmOverloads constructor(
             typedArray.recycle()
         }
     }
-
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = measureDimension(size, widthMeasureSpec)
@@ -113,7 +114,6 @@ class SpeedometerView @JvmOverloads constructor(
             putParcelable(SUPER_STATE, super.onSaveInstanceState())
         }
 
-
     override fun onRestoreInstanceState(state: Parcelable?) {
         var superState = state
 
@@ -123,6 +123,16 @@ class SpeedometerView @JvmOverloads constructor(
         }
 
         super.onRestoreInstanceState(superState)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        paintBackground(canvas)
+        paintBackgroundBorder(canvas)
+        paintDial(canvas)
+        paintDivisionDial(canvas)
+        paintArrow(canvas)
     }
 
     private fun paintBackground(canvas: Canvas) {
@@ -135,120 +145,99 @@ class SpeedometerView @JvmOverloads constructor(
     private fun paintBackgroundBorder(canvas: Canvas) {
         generalPaint.color = colorBorder
         generalPaint.style = Paint.Style.STROKE
-        generalPaint.strokeWidth = borderWidth
+        generalPaint.strokeWidth = BORDER_WIDTH
 
-        canvas.drawCircle(centerX, centerY, radius - borderWidth / 2f, generalPaint)
+        canvas.drawCircle(centerX, centerY, radius - BORDER_WIDTH / 2f, generalPaint)
     }
 
     private fun paintDial(canvas: Canvas) {
+        canvas.save()
         canvas.rotate(135f, centerX, centerY)
 
-        val scaleDigits = 0.75f
-        val theeForthCircumference = radius * scaleDigits * Math.PI * 1.5
-        val increment = 20
+        digitsPaint.color = colorDigits
+        digitsPaint.style = Paint.Style.FILL_AND_STROKE
+        digitsPaint.strokeWidth = 2f
+        digitsPaint.textSize = digitsTextSize
+        digitsPaint.setShadowLayer(6f, 0f, 0f, Color.BLUE)
 
-        for (i in 0..maxSpeed step increment) {
-            val digitText = i.toString()
+        val theeForthCircumference = radius * DIAMETER_DIGITS_RATIO * Math.PI * 1.5
 
-            digitsPaint.color = colorDigits
-            digitsPaint.style = Paint.Style.FILL_AND_STROKE
-            digitsPaint.strokeWidth = 2f
-            digitsPaint.textSize = digitsTextSize
-            digitsPaint.setShadowLayer(6f, 0f, 0f, Color.BLUE)
+        for (i in 0..maxSpeed step DIAL_INTERVAL) {
+            val digitTextLength = round(digitsPaint.measureText(i.toString()))
 
-            val digitTextLength = round(digitsPaint.measureText(digitText))
-
-            circle.addCircle(centerX, centerY, radius * scaleDigits, Path.Direction.CW)
+            circle.addCircle(centerX, centerY, radius * DIAMETER_DIGITS_RATIO, Path.Direction.CW)
 
             canvas.drawTextOnPath(
-                digitText,
+                i.toString(),
                 circle,
                 ((i * theeForthCircumference / maxSpeed) - digitTextLength / 2).toFloat(),
                 0f,
                 digitsPaint
             )
         }
+
+        canvas.restore()
     }
 
-    private fun paintTickDial(canvas: Canvas) {
+    private fun paintDivisionDial(canvas: Canvas) {
+        canvas.save()
+        canvas.rotate(135f, centerX, centerY)
 
-        canvas.scale(radius, radius)
+        generalPaint.strokeWidth = 10f
+        generalPaint.color = Color.WHITE
+        generalPaint.style = Paint.Style.FILL_AND_STROKE
 
+        val angleBetweenNumbers = Math.PI * 1.5 / maxSpeed
 
-        matrix1.setTranslate(centerX + 1000, centerY + 1000)
+        for (i in 0..maxSpeed step DIVISION_DIAL_INTERVAL) {
+            val angle = i * angleBetweenNumbers
 
-        line.transform(matrix1)
+            val x1 = (radius - BORDER_WIDTH) * (cos(angle)).toFloat()
+            val y1 = (radius - BORDER_WIDTH) * (sin(angle)).toFloat()
 
-        val scale = 0.8f
-        val step = Math.PI * 1.5 / maxSpeed
-        val threeQuartersOfCircle = Math.PI * 1.5
-        val stepBetweenBigDigits = 20
-
-        for (i in 0..maxSpeed step 10) {
-            val angle = threeQuartersOfCircle - (step * i)
-            val x1 = (cos(angle)).toFloat()
-            val y1 = (sin(angle)).toFloat()
-
-            val x2: Float
-            val y2: Float
-
-            x2 = x1 * scale
-            y2 = y1 * scale
-
-            generalPaint.color = Color.RED
-            generalPaint.style = Paint.Style.FILL_AND_STROKE
-            line.moveTo(x1, y1)
-            line.lineTo(x2, y2)
-
-
-            canvas.drawPath(line, generalPaint)
-            line.reset()
-            if (i % stepBetweenBigDigits == 0) {
-                generalPaint.strokeWidth = 0.04f
-
-
-                //canvas.drawLine( x1,  y1, x2, y2, generalPaint)
+            val scale = if (i % DIAL_INTERVAL == 0) {
+                0.85f
             } else {
-                generalPaint.strokeWidth = 0.02f
-
-                // canvas.drawLine(x1, y1, x2, y2, generalPaint)
+                0.92f
             }
+
+            line.moveTo(x1, y1)
+            line.lineTo(x1 * scale, y1 * scale)
         }
+
+        line.offset(centerX, centerY, centerLine)
+
+        canvas.drawPath(centerLine, generalPaint)
+
+        canvas.restore()
     }
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
+    private fun paintArrow(canvas: Canvas) {
+        canvas.save()
 
-        // paintBackground(canvas)
+        val limit = (currentSpeed / maxSpeed.toFloat() * 270 - 90)
 
-        //paintBackgroundBorder(canvas)
+        canvas.rotate(limit, centerX, centerY)
 
-        //paintDial(canvas)
+        arrowPaint.color = colorArrow
+        arrowPaint.strokeWidth = digitsTextSize / 4f
+        arrowPaint.style = Paint.Style.FILL_AND_STROKE
+        arrowPaint.setShadowLayer(5f, 0f, 0f, Color.WHITE)
 
-        paintTickDial(canvas)
+        canvas.drawLine(
+            radius * ARROW_LENGTH_RATIO,
+            radius * ARROW_LENGTH_RATIO,
+            radius,
+            radius,
+            arrowPaint
+        )
 
-//        //деление циферблата
-//
-//
-//        //Стрелка
-//        val limit = (currentSpeed / maxSpeed.toFloat() * 270 - 270)
-//        val scaleOfArrow = radius / 1.5f
-//        val scaleOfCircle = radius / 10
-//
-//        canvas.translate(centerX, centerY)
-//        canvas.rotate(limit)
-//
-//        arrowPaint.color = colorArrow
-//        arrowPaint.strokeWidth = digitsTextSize / 4f
-//        arrowPaint.style = Paint.Style.FILL_AND_STROKE
-//        arrowPaint.setShadowLayer(5f, 0f, 0f, Color.WHITE)
-//
-//        canvas.drawLine(0f, 0f, scaleOfArrow, scaleOfArrow, arrowPaint)
-//
-//        arrowPaint.color = Color.BLUE
-//        canvas.drawCircle(0f, 0f, scaleOfCircle, arrowPaint)
-//
-//        arrowPaint.color = Color.BLACK
-//        canvas.drawCircle(0f, 0f, scaleOfCircle / 5, arrowPaint)
+        arrowPaint.color = Color.BLUE
+        canvas.drawCircle(centerX, centerY, radius / 10, arrowPaint)
+
+        arrowPaint.color = Color.BLACK
+        canvas.drawCircle(centerX, centerY, radius / 40, arrowPaint)
+
+        canvas.restore()
     }
 }
