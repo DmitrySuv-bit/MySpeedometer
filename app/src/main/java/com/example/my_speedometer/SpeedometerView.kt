@@ -23,6 +23,8 @@ class SpeedometerView @JvmOverloads constructor(
         const val DIAL_INTERVAL = 20
         const val DIVISION_DIAL_INTERVAL = 10
         const val ARROW_LENGTH_RATIO = 0.35f
+        const val LARGE_DIVISION_RATIO = 0.85f
+        const val SMALL_DIVISION_RATIO = 0.92f
     }
 
     var currentSpeed = 0f
@@ -196,9 +198,9 @@ class SpeedometerView @JvmOverloads constructor(
             val y1 = (radius - BORDER_WIDTH) * (sin(angle)).toFloat()
 
             val scale = if (i % DIAL_INTERVAL == 0) {
-                0.85f
+                LARGE_DIVISION_RATIO
             } else {
-                0.92f
+                SMALL_DIVISION_RATIO
             }
 
             line.moveTo(x1, y1)
