@@ -5,8 +5,8 @@
         <attr name="maxSpeed" format="integer" />
         <attr name="size" format="integer" />
         <attr name="digitsTextSize" format="float" />
-        <attr name="colorBackground" format="color" />
-        <attr name="colorBorder" format="color" />
-        <attr name="colorDigits" format="color" />
+        <attr name="myBackgroundColor" format="color" />
+        <attr name="myBorderColor" format="color" />
+        <attr name="myDigitsColor" format="color" />
     </declare-styleable>
 </resources>

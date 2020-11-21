@@ -59,9 +59,9 @@ class SpeedometerView @JvmOverloads constructor(
     private var arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var digitsPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private var colorBackground = Color.DKGRAY
-    private var colorBorder = Color.RED
-    private var colorDigits = Color.WHITE
+    private var myBackgroundColor = Color.DKGRAY
+    private var myBorderColor = Color.RED
+    private var myDigitsColor = Color.WHITE
 
     init {
         val typedArray = context.obtainStyledAttributes(
@@ -75,10 +75,10 @@ class SpeedometerView @JvmOverloads constructor(
             size = typedArray.getInt(R.styleable.SpeedometerView_size, 1000)
             digitsTextSize =
                 typedArray.getFloat(R.styleable.SpeedometerView_digitsTextSize, size / 20f)
-            colorBackground =
-                typedArray.getInt(R.styleable.SpeedometerView_colorBackground, colorBackground)
-            colorBorder = typedArray.getInt(R.styleable.SpeedometerView_colorBorder, colorBorder)
-            colorDigits = typedArray.getInt(R.styleable.SpeedometerView_colorDigits, colorDigits)
+            myBackgroundColor =
+                typedArray.getInt(R.styleable.SpeedometerView_myBackgroundColor, myBackgroundColor)
+            myBorderColor = typedArray.getInt(R.styleable.SpeedometerView_myBorderColor, myBorderColor)
+            myDigitsColor = typedArray.getInt(R.styleable.SpeedometerView_myDigitsColor, myDigitsColor)
         } finally {
             typedArray.recycle()
         }
@@ -136,14 +136,14 @@ class SpeedometerView @JvmOverloads constructor(
     }
 
     private fun paintBackground(canvas: Canvas) {
-        generalPaint.color = colorBackground
+        generalPaint.color = myBackgroundColor
         generalPaint.style = Paint.Style.FILL
 
         canvas.drawCircle(centerX, centerY, radius, generalPaint)
     }
 
     private fun paintBackgroundBorder(canvas: Canvas) {
-        generalPaint.color = colorBorder
+        generalPaint.color = myBorderColor
         generalPaint.style = Paint.Style.STROKE
         generalPaint.strokeWidth = BORDER_WIDTH
 
@@ -154,7 +154,7 @@ class SpeedometerView @JvmOverloads constructor(
         canvas.save()
         canvas.rotate(135f, centerX, centerY)
 
-        digitsPaint.color = colorDigits
+        digitsPaint.color = myDigitsColor
         digitsPaint.style = Paint.Style.FILL_AND_STROKE
         digitsPaint.strokeWidth = 2f
         digitsPaint.textSize = digitsTextSize
